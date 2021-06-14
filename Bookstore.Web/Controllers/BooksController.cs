@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Bookstore.Web.Data;
+﻿using Bookstore.Web.Data;
 using Bookstore.Web.Models;
-using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Bookstore.Web.Controllers
 {
@@ -26,10 +23,7 @@ namespace Bookstore.Web.Controllers
 
         // GET: Books
         public async Task<IActionResult> Index()
-        {
-            var bookstoreDbContext = _context.Book.Include(b => b.Author);
-            return View(await bookstoreDbContext.ToListAsync());
-        }
+            => View(await _context.Books.ToListAsync());
 
         // GET: Books/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -39,8 +33,7 @@ namespace Bookstore.Web.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Book
-                .Include(b => b.Author)
+            var book = await _context.Books
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (book == null)
             {
@@ -52,27 +45,21 @@ namespace Bookstore.Web.Controllers
 
         // GET: Books/Create
         public IActionResult Create()
-        {
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "FullName");
-            return View();
-        }
+            => View();
 
         // POST: Books/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Book book)
         {
             if (ModelState.IsValid)
             {
-                book.ImagePath = await UploadImage(book.Image);
-
+                book.ImagePath = UploadImage(book.Image);
                 _context.Add(book);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "FullName", book.AuthorId);
+
             return View(book);
         }
 
@@ -84,18 +71,15 @@ namespace Bookstore.Web.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Book.FindAsync(id);
+            var book = await _context.Books.FindAsync(id);
             if (book == null)
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "FullName", book.AuthorId);
             return View(book);
         }
 
         // POST: Books/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Book book)
@@ -107,30 +91,21 @@ namespace Bookstore.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                var uploadedPath = await UploadImage(book.Image);
-
-                if (!string.IsNullOrWhiteSpace(uploadedPath))
-                    book.ImagePath = uploadedPath;
+                var path = UploadImage(book.Image);
+                book.ImagePath = string.IsNullOrWhiteSpace(path) ? book.ImagePath : path;
 
                 try
                 {
                     _context.Update(book);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!BookExists(book.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return _context.Books.Any(e => e.Id == id) ?
+                        View(book) : NotFound();
                 }
-                return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "FullName", book.AuthorId);
             return View(book);
         }
 
@@ -142,8 +117,7 @@ namespace Bookstore.Web.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Book
-                .Include(b => b.Author)
+            var book = await _context.Books
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (book == null)
             {
@@ -158,27 +132,40 @@ namespace Bookstore.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var book = await _context.Book.FindAsync(id);
-            _context.Book.Remove(book);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                var book = await _context.Books.FindAsync(id);
+
+                DeleteImage(book.Image);
+                _context.Books.Remove(book);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return RedirectToAction(nameof(Delete));
+            }
         }
 
-        private bool BookExists(int id)
+        private void DeleteImage(IFormFile image)
         {
-            return _context.Book.Any(e => e.Id == id);
+            if (image != null && image.Length > 0)
+            {
+                var path = Path.Combine(_webHostEnvironment.WebRootPath, "img", image.FileName);
+
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
         }
 
-        private async Task<string> UploadImage(IFormFile image)
+        private string UploadImage(IFormFile image)
         {
-            var fileName = string.Empty;
+            string fileName = null;
+
             if (image != null && image.Length > 0)
             {
                 fileName = image.FileName;
-                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", fileName);
-
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await image.CopyToAsync(stream);
+                image.CopyTo(new FileStream(Path.Combine(_webHostEnvironment.WebRootPath, "img", fileName), FileMode.Create));
             }
 
             return fileName;
