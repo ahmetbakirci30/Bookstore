@@ -21,6 +21,17 @@ namespace Bookstore.Web.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        public async Task<IActionResult> Authors()
+            => View(await _context.Books.Select(book => new AuthorViewModel
+            {
+                AddedDate = book.AddedDate,
+                FullName = book.AuthorName
+            }).ToListAsync());
+
+        public IActionResult Search(string text)
+            => Ok(_context.Books.Select(book => book.AuthorName)
+                .FirstOrDefault(c => c.ToLower().Contains(text.ToLower())));
+
         // GET: Books
         public async Task<IActionResult> Index()
             => View(await _context.Books.ToListAsync());

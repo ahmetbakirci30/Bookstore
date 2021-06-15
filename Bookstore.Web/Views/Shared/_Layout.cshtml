@@ -25,9 +25,16 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Books" asp-action="Index">Books</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Books" asp-action="Authors">Authors</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
+                    <form class="d-flex" asp-controller="Home" asp-action="Search">
+                        <input class="form-control mr-2" type="search" placeholder="Search" name="text">
+                        <input class="btn btn-outline-success" type="submit" value="Search" />
+                    </form>
                 </div>
             </div>
         </nav>
@@ -47,5 +54,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

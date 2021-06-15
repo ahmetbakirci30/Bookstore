@@ -10,7 +10,7 @@
 
 <table class="table table-hover table-responsive">
     <thead>
-        <tr>
+        <tr class="text-center">
             <th>
                 @Html.DisplayNameFor(model => model.Title)
             </th>
@@ -34,7 +34,7 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr class="text-center">
                 <td>
                     @Html.DisplayFor(modelItem => item.Title)
                 </td>

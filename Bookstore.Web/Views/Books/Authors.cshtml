@@ -1,0 +1,29 @@
+﻿@model IEnumerable<AuthorViewModel>
+
+<h1>Authors</h1>
+
+<table class="table table-hover table-responsive table-borderless mt-5">
+    <thead>
+        <tr class="text-center">
+            <th>
+                @Html.DisplayNameFor(model => model.FullName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AddedDate)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr class="text-center">
+                <td>
+                    @Html.DisplayFor(modelItem => item.FullName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AddedDate)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
