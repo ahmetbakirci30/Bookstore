@@ -22,15 +22,7 @@ namespace Bookstore.Web.Controllers
         }
 
         public async Task<IActionResult> Authors()
-            => View(await _context.Books.Select(book => new AuthorViewModel
-            {
-                AddedDate = book.AddedDate,
-                FullName = book.AuthorName
-            }).ToListAsync());
-
-        public IActionResult Search(string text)
-            => Ok(_context.Books.Select(book => book.AuthorName)
-                .FirstOrDefault(c => c.ToLower().Contains(text.ToLower())));
+            => View(await _context.Books.Select(book => book.AuthorName).ToListAsync());
 
         // GET: Books
         public async Task<IActionResult> Index()
